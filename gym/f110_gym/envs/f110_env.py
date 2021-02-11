@@ -223,7 +223,7 @@ class F110Env(gym.Env, utils.EzPickle):
             if self.toggle_list[i] < 4:
                 self.lap_times[i] = self.current_time
         
-        done = (self.collisions[self.ego_idx]) or np.all(self.toggle_list >= 4)
+        done = (self.collisions[self.ego_idx]) or np.all(self.toggle_list >= 2)
         
         return done, self.toggle_list >= 4
 
@@ -497,7 +497,7 @@ def first_point_on_trajectory_intersecting_circle(point, radius, trajectory, t=0
 
     return first_p, first_i, first_t
 
-# @njit(fastmath=False, cache=True)
+@njit(fastmath=False, cache=True)
 def get_actuation(pose_theta, lookahead_point, position, lookahead_distance, wheelbase):
     waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
     speed = lookahead_point[2]
@@ -574,6 +574,6 @@ if __name__ == '__main__':
         speed, steer = planner.plan(obs['poses_x'][0], obs['poses_y'][0], obs['poses_theta'][0], work['tlad'], work['vgain'])
         obs, step_reward, done, info = env.step(np.array([[steer, speed]]))
         laptime += step_reward
-        env.render(mode='human')
+        env.render(mode='human_fast')
     print('Sim elapsed time:', laptime, 'Real elapsed time:', time.time()-start)
 
