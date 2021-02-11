@@ -53,7 +53,7 @@ class RaceCar(object):
 
     """
 
-    def __init__(self, params, seed, is_ego=False, time_step=0.01, num_beams=1080, fov=4.7):
+    def __init__(self, params, seed, is_ego=False, time_step=0.01, num_beams=10, fov=np.pi):
         """
         Init function
 
