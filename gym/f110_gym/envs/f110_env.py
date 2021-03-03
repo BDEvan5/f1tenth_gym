@@ -100,15 +100,16 @@ class F110Env(gym.Env, utils.EzPickle):
             self.seed = 12345
         try:
             self.map_name = kwargs['map']
-            # different default maps
-            if self.map_name == 'berlin':
-                self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/berlin.yaml'
-            elif self.map_name == 'skirk':
-                self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/skirk.yaml'
-            elif self.map_name == 'levine':
-                self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/levine.yaml'
-            else:
-                self.map_path = self.map_name + '.yaml'
+            self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/' + self.map_name + '.yaml'
+            # # different default maps
+            # if self.map_name == 'berlin':
+            #     self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/berlin.yaml'
+            # elif self.map_name == 'skirk':
+            #     self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/skirk.yaml'
+            # elif self.map_name == 'levine':
+            #     self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/levine.yaml'
+            # else:
+                # self.map_path = self.map_name + '.yaml'
         except:
             self.map_path = os.path.dirname(os.path.abspath(__file__)) + '/maps/vegas.yaml'
 
@@ -211,7 +212,8 @@ class F110Env(gym.Env, utils.EzPickle):
         temp_y[np.invert(np.logical_or(idx1, idx2))] = 0
 
         dist2 = delta_pt[0,:]**2 + temp_y**2
-        closes = dist2 <= 0.1
+        # closes = dist2 <= 0.1 # I think this is distance to be considered close?
+        closes = dist2 <= 0.05 # I think this is distance to be considered close?
         for i in range(self.num_agents):
             if closes[i] and not self.near_starts[i]:
                 self.near_starts[i] = True
@@ -220,7 +222,7 @@ class F110Env(gym.Env, utils.EzPickle):
                 self.near_starts[i] = False
                 self.toggle_list[i] += 1
             self.lap_counts[i] = self.toggle_list[i] // 2
-            if self.toggle_list[i] < 4:
+            if self.toggle_list[i] < 4: # update the current lap time every step
                 self.lap_times[i] = self.current_time
         
         done = (self.collisions[self.ego_idx]) or np.all(self.toggle_list >= 2)
@@ -497,7 +499,7 @@ def first_point_on_trajectory_intersecting_circle(point, radius, trajectory, t=0
 
     return first_p, first_i, first_t
 
-@njit(fastmath=False, cache=True)
+# @njit(fastmath=False, cache=True)
 def get_actuation(pose_theta, lookahead_point, position, lookahead_distance, wheelbase):
     waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
     speed = lookahead_point[2]
