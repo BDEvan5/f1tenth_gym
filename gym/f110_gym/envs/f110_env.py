@@ -25,12 +25,14 @@ Author: Hongrui Zheng
 '''
 
 # gym imports
+# from envs.laser_models import get_dt
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 
 # base classes
 from f110_gym.envs.base_classes import Simulator
+from f110_gym.envs.laser_models import get_dt
 
 # others
 import numpy as np
@@ -173,10 +175,18 @@ class F110Env(gym.Env, utils.EzPickle):
         # initiate stuff
         self.sim = Simulator(self.params, self.num_agents, self.seed)
         self.sim.set_map(self.map_path, self.map_ext)
+        self.set_map_params()
 
         # rendering
         self.renderer = None
         self.current_obs = None
+
+        # needed for obstacle addition
+        self.empty_map_img = None
+        self.original_dt = None
+        self.map_resolution = None
+        self.map_height = None
+        self.map_width = None
 
     def __del__(self):
         """
@@ -313,6 +323,31 @@ class F110Env(gym.Env, utils.EzPickle):
         obs, reward, done, info = self.step(action)
         return obs, reward, done, info
 
+    def add_obstacles(self, n=4):
+        self.sim.add_obstacles(n)
+
+        map_img = np.copy(self.empty_map_img)
+
+        obs_size_m = np.array([0.5, 0.5])
+        obs_size_px = obs_size_m / self.map_resolution
+
+        obs_locations = []
+        while len(obs_locations) < n:
+            rand_x = int(np.random.random() * self.map_width)
+            rand_y = int(np.random.random() * self.map_height)
+
+            if self.original_dt[rand_x, rand_y] > 0.05:
+                obs_locations.append([rand_x, rand_y])
+
+        for location in obs_locations:
+            x, y = location[0], location[1]
+            for i in range(0, int(obs_size_px[0])):
+                for j in range(0, int(obs_size_px[1])):
+                    map_img[x+i, y+j] = 0
+
+        self.sim.update_map_img(map_img)
+        self.renderer.update_map_img(map_img)
+
     def update_map(self, map_path, map_ext):
         """
         Updates the map used by simulation
@@ -325,6 +360,19 @@ class F110Env(gym.Env, utils.EzPickle):
             None
         """
         self.sim.set_map(map_path, map_ext)
+
+    def set_map_params(self):
+        # needed for obstacles
+        ego_vehicle = self.sim.agents[0].scan_simulator
+        self.empty_map_img = ego_vehicle.map_img.copy()
+        self.map_resolution = ego_vehicle.map_resolution
+        self.origin_x = ego_vehicle.orig_x
+        self.origin_y = ego_vehicle.orig_y
+        self.map_height = ego_vehicle.map_height
+        self.map_width = ego_vehicle.map_width
+        self.original_dt = get_dt(self.empty_map_img, self.map_resolution)
+
+        print(f"Map params set in env: {self.map_resolution}")
 
     def update_params(self, params, index=-1):
         """
@@ -566,6 +614,7 @@ if __name__ == '__main__':
     # env = gym.make('f110_gym:f110-v0', map=conf.map_path, map_ext=conf.map_ext, num_agents=1)
     env = F110Env(map=conf.map_path, map_ext=conf.map_ext, num_agents=1)
     obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
+    env.add_obstacles(4)
     env.render()
     planner = PurePursuitPlanner(conf, 0.17145+0.15875)
 
@@ -576,6 +625,7 @@ if __name__ == '__main__':
         speed, steer = planner.plan(obs['poses_x'][0], obs['poses_y'][0], obs['poses_theta'][0], work['tlad'], work['vgain'])
         obs, step_reward, done, info = env.step(np.array([[steer, speed]]))
         laptime += step_reward
-        env.render(mode='human_fast')
+        env.render(mode='human')
+        # env.render(mode='human_fast')
     print('Sim elapsed time:', laptime, 'Real elapsed time:', time.time()-start)
 

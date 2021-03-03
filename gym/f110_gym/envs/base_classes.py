@@ -320,6 +320,8 @@ class RaceCar(object):
         # ray cast other agents to modify scan
         self.current_scan = self.ray_cast_agents(self.current_scan)
 
+    def add_obstacles(self, n):
+        self.scan_simulator.add_obstacles(n)
 
 
 class Simulator(object):
@@ -386,6 +388,15 @@ class Simulator(object):
         for agent in self.agents:
             agent.set_map(map_path, map_ext)
 
+    def add_obstacles(self, n):
+        # map_obs_img = 
+
+        for agent in self.agents:
+            agent.add_obstacles(n)
+
+    def update_map_img(self, map_img):
+        for agent in self.agents:
+            agent.scan_simulator.map_img = map_img.copy()
 
     def update_params(self, params, agent_idx=-1):
         """
