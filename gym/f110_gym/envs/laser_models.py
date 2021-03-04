@@ -27,6 +27,7 @@ Prototype of Utility functions and classes for simulating 2D LIDAR scans
 Author: Hongrui Zheng
 """
 
+from matplotlib import pyplot as plt
 import numpy as np
 from numba import njit
 from scipy.ndimage import distance_transform_edt as edt
@@ -350,6 +351,9 @@ class ScanSimulator2D(object):
         theta_arr = np.linspace(0.0, 2*np.pi, num=theta_dis)
         self.sines = np.sin(theta_arr)
         self.cosines = np.cos(theta_arr)
+
+        self.empty_map_img = None
+        self.original_dt = None
     
     def set_map(self, map_path, map_ext):
         """
@@ -369,6 +373,7 @@ class ScanSimulator2D(object):
         map_img_path = os.path.splitext(map_path)[0] + map_ext
         self.map_img = np.array(Image.open(map_img_path).transpose(Image.FLIP_TOP_BOTTOM))
         self.map_img = self.map_img.astype(np.float64)
+        self.empty_map_img = self.map_img.copy()
 
         # grayscale -> binary
         self.map_img[self.map_img <= 128.] = 0.
@@ -394,8 +399,13 @@ class ScanSimulator2D(object):
 
         # get the distance transform
         self.dt = get_dt(self.map_img, self.map_resolution)
+        # self.original_dt = self.dt.copy()
 
         return True
+
+    def update_map_img(self, map_img):
+        self.map_img = map_img
+        self.dt = get_dt(self.map_img, self.map_resolution)
 
     def reset_rng(self, seed):
         """
