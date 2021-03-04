@@ -27,6 +27,7 @@ Author: Hongrui Zheng
 # gym imports
 # from envs.laser_models import get_dt
 from PIL import Image
+from matplotlib import pyplot as plt
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
@@ -326,8 +327,8 @@ class F110Env(gym.Env, utils.EzPickle):
         return obs, reward, done, info
 
     def add_obstacles(self, n=4):
-        # self.sim.add_obstacles(n)
-
+        if self.renderer is None:
+            self.render()
         map_img = np.copy(self.empty_map_img)
 
         obs_size_m = np.array([0.5, 0.5])
@@ -341,15 +342,25 @@ class F110Env(gym.Env, utils.EzPickle):
             if self.original_dt[rand_y, rand_x] > 0.05:
                 obs_locations.append([rand_y, rand_x])
 
+        obs_locations = np.array(obs_locations)
         for location in obs_locations:
             x, y = location[0], location[1]
             for i in range(0, int(obs_size_px[0])):
                 for j in range(0, int(obs_size_px[1])):
                     map_img[x+i, y+j] = 0
 
-        self.sim.add_obstacle_info(obs_locations, obs_size_m)
+        # plt.figure(1)
+        # plt.imshow(map_img)
+        # # plt.show()
+        # plt.pause(0.0001)
+
         self.sim.update_map_img(map_img)
-        self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
+        # self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
+        obstacle_x = obs_locations[:, 0] * self.map_resolution + self.orig_y
+        obstacle_y = obs_locations[:, 1] * self.map_resolution + self.orig_x
+        obs_locations_m = np.concatenate([obstacle_y[:, None], obstacle_x[:, None]], axis=-1)
+
+        self.renderer.add_obstacles(obs_locations_m, obs_size_m)
 
     def update_map(self, map_path, map_ext):
         """
@@ -391,7 +402,6 @@ class F110Env(gym.Env, utils.EzPickle):
         self.map_width = self.empty_map_img.shape[1]
 
         self.original_dt = get_dt(self.empty_map_img, self.map_resolution)
-
 
     def update_params(self, params, index=-1):
         """
@@ -634,7 +644,7 @@ if __name__ == '__main__':
     env = F110Env(map=conf.map_path, map_ext=conf.map_ext, num_agents=1)
     obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
     env.render()
-    env.add_obstacles(4)
+    env.add_obstacles(10)
     planner = PurePursuitPlanner(conf, 0.17145+0.15875)
 
     laptime = 0.0

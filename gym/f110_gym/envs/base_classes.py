@@ -389,10 +389,6 @@ class Simulator(object):
         for agent in self.agents:
             agent.set_map(map_path, map_ext)
 
-    def add_obstacle_info(self, obs_locations: list, obs_size: list):
-        self.obs_locations = obs_locations
-        self.obs_size = obs_size
-
     def update_map_img(self, map_img):
         for agent in self.agents:
             agent.scan_simulator.update_map_img(map_img)
@@ -429,26 +425,13 @@ class Simulator(object):
         Returns:
             None
         """
-        if self.obs_locations == None:
         # get vertices of all agents
-            all_vertices = np.empty((self.num_agents, 4, 2))
-            for i in range(self.num_agents):
-                all_vertices[i, :, :] = get_vertices(np.append(self.agents[i].state[0:2],self.agents[i].state[4]), self.params['length'], self.params['width'])
-            self.collisions, self.collision_idx = collision_multiple(all_vertices)
-
-        else:
-            n_obs = len(self.obs_locations)
-
-            all_vertices = np.empty((self.num_agents + n_obs, 4, 2))
-            for i in range(self.num_agents):
-                all_vertices[i, :, :] = get_vertices(np.append(self.agents[i].state[0:2],self.agents[i].state[4]), self.params['length'], self.params['width'])
-            
-            for i in range(n_obs):
-                pos_th = np.append(self.obs_locations[i], np.pi/2)
-                all_vertices[self.num_agents + i, :, :] = get_vertices(pos_th, self.obs_size[0], self.obs_size[1])
-            
+        all_vertices = np.empty((self.num_agents, 4, 2))
+        for i in range(self.num_agents):
+            all_vertices[i, :, :] = get_vertices(np.append(self.agents[i].state[0:2],self.agents[i].state[4]), self.params['length'], self.params['width'])
         self.collisions, self.collision_idx = collision_multiple(all_vertices)
 
+        self.collisions, self.collision_idx = collision_multiple(all_vertices)
 
     def step(self, control_inputs):
         """
