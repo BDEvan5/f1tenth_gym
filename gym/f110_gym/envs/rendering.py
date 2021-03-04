@@ -154,6 +154,8 @@ class EnvRenderer(pyglet.window.Window):
         self.map_points = map_points
 
     def update_map_img(self, map_img, map_resolution, origin_x, origin_y):
+        # self.batch = pyglet.graphics.Batch() # reset the pts
+
         map_height = map_img.shape[0]
         map_width = map_img.shape[1]
 

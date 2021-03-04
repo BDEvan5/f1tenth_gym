@@ -326,7 +326,7 @@ class F110Env(gym.Env, utils.EzPickle):
         return obs, reward, done, info
 
     def add_obstacles(self, n=4):
-        self.sim.add_obstacles(n)
+        # self.sim.add_obstacles(n)
 
         map_img = np.copy(self.empty_map_img)
 
@@ -335,11 +335,11 @@ class F110Env(gym.Env, utils.EzPickle):
 
         obs_locations = []
         while len(obs_locations) < n:
-            rand_x = int(np.random.random() * self.map_width)
-            rand_y = int(np.random.random() * self.map_height)
+            rand_x = int(np.random.random() * (self.map_width - obs_size_px[0]))
+            rand_y = int(np.random.random() * (self.map_height - obs_size_px[1]))
 
-            if self.original_dt[rand_x, rand_y] > 0.05:
-                obs_locations.append([rand_x, rand_y])
+            if self.original_dt[rand_y, rand_x] > 0.05:
+                obs_locations.append([rand_y, rand_x])
 
         for location in obs_locations:
             x, y = location[0], location[1]
@@ -347,6 +347,7 @@ class F110Env(gym.Env, utils.EzPickle):
                 for j in range(0, int(obs_size_px[1])):
                     map_img[x+i, y+j] = 0
 
+        self.sim.add_obstacle_info(obs_locations, obs_size_m)
         self.sim.update_map_img(map_img)
         self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
 
@@ -391,7 +392,6 @@ class F110Env(gym.Env, utils.EzPickle):
 
         self.original_dt = get_dt(self.empty_map_img, self.map_resolution)
 
-        print(f"Map params set in env: {self.map_resolution}")
 
     def update_params(self, params, index=-1):
         """

@@ -399,38 +399,13 @@ class ScanSimulator2D(object):
 
         # get the distance transform
         self.dt = get_dt(self.map_img, self.map_resolution)
-        self.original_dt = self.dt.copy()
+        # self.original_dt = self.dt.copy()
 
         return True
 
-    def add_obstacles(self, n):
-        self.map_img = self.empty_map_img.copy() # clear previous obstacles
-
-        obs_size_m = np.array([0.5, 0.5])
-        obs_size_px = obs_size_m / self.map_resolution
-
-        obs_locations = []
-        while len(obs_locations) < n:
-            rand_x = int(np.random.random() * self.map_width)
-            rand_y = int(np.random.random() * self.map_height)
-
-            if self.original_dt[rand_x, rand_y] > 0.05:
-                obs_locations.append([rand_x, rand_y])
-
-        for location in obs_locations:
-            x, y = location[0], location[1]
-            for i in range(0, int(obs_size_px[0])):
-                for j in range(0, int(obs_size_px[1])):
-                    self.map_img[x+i, y+j] = 0
-
+    def update_map_img(self, map_img):
+        self.map_img = map_img
         self.dt = get_dt(self.map_img, self.map_resolution)
-
-        # plt.figure(1)
-        # plt.imshow(self.original_dt)
-        # plt.figure(2)
-        # plt.imshow(self.dt)
-
-        # plt.show()
 
     def reset_rng(self, seed):
         """
