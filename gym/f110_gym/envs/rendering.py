@@ -159,8 +159,20 @@ class EnvRenderer(pyglet.window.Window):
         self.map_points = map_points
 
     def update_map_img(self, map_img, map_resolution, origin_x, origin_y):
-        # self.batch = pyglet.graphics.Batch() # reset the pts
+        """
+        Updates the image used for rendering.
+        Development still needed to remove the previous set of obstacle points once new obstacles have been added.
+        At the moment, it just keeps adding points without removing the old map
 
+        Args:
+            map_img (np.ndarray(width, height)): new image to be used
+            map_resolution (float)
+            origin_x (float)
+            origin_y (float)
+
+        Returns:
+            None
+        """
         map_height = map_img.shape[0]
         map_width = map_img.shape[1]
 
@@ -183,6 +195,16 @@ class EnvRenderer(pyglet.window.Window):
 
 
     def add_obstacles(self, obs_locations, obs_size):
+        """
+        Adds green obstacles to the map
+
+        Args:
+            obs_locations (np.ndarray(n_obstacles, 2)): coordinates of obstacles to add
+            obs_size (list(2)): size of obstacles
+        
+        Returns:
+            None
+        """
         if self.obstacle_poses is None:
             self.obstacles = []
             for i in range(len(obs_locations)):
@@ -202,8 +224,6 @@ class EnvRenderer(pyglet.window.Window):
             vertices = list(vertices_np.flatten())
             self.obstacles[j].vertices = vertices
         self.obstacle_poses = poses
-
-
 
     def on_resize(self, width, height):
         """
@@ -387,6 +407,3 @@ class EnvRenderer(pyglet.window.Window):
 
         self.score_label.text = 'Lap Time: {laptime:.2f}, Ego Lap Count: {count:.0f}'.format(laptime=obs['lap_times'][0], count=obs['lap_counts'][obs['ego_idx']])
 
-
-
-    # def update_obstacles()

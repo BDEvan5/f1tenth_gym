@@ -326,12 +326,23 @@ class F110Env(gym.Env, utils.EzPickle):
         obs, reward, done, info = self.step(action)
         return obs, reward, done, info
 
-    def add_obstacles(self, n=4):
+    def add_obstacles(self, n_obstacles=4, obstacle_size=[0.5, 0.5]):
+        """
+        Adds a set number of obstacles to the envioronment. 
+        Updates the renderer and the map kept by the laser scaner for each vehicle in the simulator
+
+        Args:
+            n_obstacles (int): number of obstacles to add
+            obstacle_size (list(2)): rectangular size of obstacles
+            
+        Returns:
+            None
+        """
         if self.renderer is None:
             self.render()
         map_img = np.copy(self.empty_map_img)
 
-        obs_size_m = np.array([0.5, 0.5])
+        obs_size_m = np.array(obstacle_size)
         obs_size_px = obs_size_m / self.map_resolution
 
         obs_locations = []
@@ -356,7 +367,7 @@ class F110Env(gym.Env, utils.EzPickle):
 
         self.renderer.add_obstacles(obs_locations_m, obs_size_m)
 
-        self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
+        # self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
 
     def update_map(self, map_path, map_ext):
         """
