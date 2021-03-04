@@ -26,6 +26,7 @@ Author: Hongrui Zheng
 
 # gym imports
 # from envs.laser_models import get_dt
+from PIL import Image
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
@@ -172,21 +173,22 @@ class F110Env(gym.Env, utils.EzPickle):
         self.start_thetas = np.zeros((self.num_agents, ))
         self.start_rot = np.eye(2)
 
-        # initiate stuff
-        self.sim = Simulator(self.params, self.num_agents, self.seed)
-        self.sim.set_map(self.map_path, self.map_ext)
-        self.set_map_params()
-
-        # rendering
-        self.renderer = None
-        self.current_obs = None
-
         # needed for obstacle addition
         self.empty_map_img = None
         self.original_dt = None
         self.map_resolution = None
         self.map_height = None
         self.map_width = None
+
+        # initiate stuff
+        self.sim = Simulator(self.params, self.num_agents, self.seed)
+        self.sim.set_map(self.map_path, self.map_ext)
+        self.set_map_params(self.map_path, self.map_ext)
+
+        # rendering
+        self.renderer = None
+        self.current_obs = None
+
 
     def __del__(self):
         """
@@ -346,7 +348,7 @@ class F110Env(gym.Env, utils.EzPickle):
                     map_img[x+i, y+j] = 0
 
         self.sim.update_map_img(map_img)
-        self.renderer.update_map_img(map_img)
+        self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
 
     def update_map(self, map_path, map_ext):
         """
@@ -360,16 +362,33 @@ class F110Env(gym.Env, utils.EzPickle):
             None
         """
         self.sim.set_map(map_path, map_ext)
+        self.set_map_params(map_path, map_ext)
 
-    def set_map_params(self):
+    def set_map_params(self, map_path, map_ext):
         # needed for obstacles
-        ego_vehicle = self.sim.agents[0].scan_simulator
-        self.empty_map_img = ego_vehicle.map_img.copy()
-        self.map_resolution = ego_vehicle.map_resolution
-        self.origin_x = ego_vehicle.orig_x
-        self.origin_y = ego_vehicle.orig_y
-        self.map_height = ego_vehicle.map_height
-        self.map_width = ego_vehicle.map_width
+
+        with open(map_path, 'r') as yaml_stream:
+            try:
+                map_metadata = yaml.safe_load(yaml_stream)
+                self.map_resolution = map_metadata['resolution']
+                self.origin = map_metadata['origin']
+            except yaml.YAMLError as ex:
+                print(ex)
+
+        # calculate map parameters
+        self.orig_x = self.origin[0]
+        self.orig_y = self.origin[1]
+
+        map_img_path = os.path.splitext(map_path)[0] + map_ext
+        self.map_img = np.array(Image.open(map_img_path).transpose(Image.FLIP_TOP_BOTTOM))
+        self.empty_map_img = self.map_img.astype(np.float64)
+
+        self.empty_map_img[self.empty_map_img <= 128.] = 0.
+        self.empty_map_img[self.empty_map_img > 128.] = 255.
+
+        self.map_height = self.empty_map_img.shape[0]
+        self.map_width = self.empty_map_img.shape[1]
+
         self.original_dt = get_dt(self.empty_map_img, self.map_resolution)
 
         print(f"Map params set in env: {self.map_resolution}")
@@ -614,8 +633,8 @@ if __name__ == '__main__':
     # env = gym.make('f110_gym:f110-v0', map=conf.map_path, map_ext=conf.map_ext, num_agents=1)
     env = F110Env(map=conf.map_path, map_ext=conf.map_ext, num_agents=1)
     obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
-    env.add_obstacles(4)
     env.render()
+    env.add_obstacles(4)
     planner = PurePursuitPlanner(conf, 0.17145+0.15875)
 
     laptime = 0.0
