@@ -349,18 +349,14 @@ class F110Env(gym.Env, utils.EzPickle):
                 for j in range(0, int(obs_size_px[1])):
                     map_img[x+i, y+j] = 0
 
-        # plt.figure(1)
-        # plt.imshow(map_img)
-        # # plt.show()
-        # plt.pause(0.0001)
-
         self.sim.update_map_img(map_img)
-        # self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
-        obstacle_x = obs_locations[:, 0] * self.map_resolution + self.orig_y
-        obstacle_y = obs_locations[:, 1] * self.map_resolution + self.orig_x
+        obstacle_x = obs_locations[:, 0] * self.map_resolution + self.orig_y + obs_size_m[0] / 2
+        obstacle_y = obs_locations[:, 1] * self.map_resolution + self.orig_x + obs_size_m[1] / 2
         obs_locations_m = np.concatenate([obstacle_y[:, None], obstacle_x[:, None]], axis=-1)
 
         self.renderer.add_obstacles(obs_locations_m, obs_size_m)
+
+        self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
 
     def update_map(self, map_path, map_ext):
         """
@@ -443,8 +439,7 @@ class F110Env(gym.Env, utils.EzPickle):
             time.sleep(0.005)
         elif mode == 'human_fast':
             pass
-
-
+    
 
 import time
 import yaml

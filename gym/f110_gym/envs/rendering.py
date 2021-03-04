@@ -35,6 +35,7 @@ from pyglet.gl import *
 import numpy as np
 from PIL import Image
 import yaml
+from time import sleep
 
 # helpers
 from f110_gym.envs.collision_models import get_vertices
@@ -180,13 +181,15 @@ class EnvRenderer(pyglet.window.Window):
             self.batch.add(1, GL_POINTS, None, ('v3f/stream', [map_points[i, 0], map_points[i, 1], map_points[i, 2]]), ('c3B/stream', [183, 193, 222]))
         self.map_points = map_points
 
+
     def add_obstacles(self, obs_locations, obs_size):
         if self.obstacle_poses is None:
             self.obstacles = []
             for i in range(len(obs_locations)):
                 vertices_np = get_vertices(np.array([0., 0., 0.]), obs_size[0], obs_size[1])
                 vertices = list(vertices_np.flatten())
-                obstacle = self.batch.add(4, GL_QUADS, None, ('v2f', vertices), ('c3B', [172, 97, 185, 172, 97, 185, 172, 97, 185, 172, 97, 185]))
+                # obstacle = self.batch.add(4, GL_QUADS, None, ('v2f', vertices), ('c3B', [172, 97, 185, 172, 97, 185, 172, 97, 185, 172, 97, 185]))
+                obstacle = self.batch.add(4, GL_QUADS, None, ('v2f', vertices), ('c3B', [0, 225, 0, 0, 225, 0, 0, 225, 0, 0, 225, 0]))
                 self.obstacles.append(obstacle)
 
         poses_x = obs_locations[:, 0]
@@ -383,5 +386,7 @@ class EnvRenderer(pyglet.window.Window):
         self.poses = poses
 
         self.score_label.text = 'Lap Time: {laptime:.2f}, Ego Lap Count: {count:.0f}'.format(laptime=obs['lap_times'][0], count=obs['lap_counts'][obs['ego_idx']])
+
+
 
     # def update_obstacles()
