@@ -489,6 +489,7 @@ class Simulator(object):
             'linear_vels_x': [],
             'linear_vels_y': [],
             'ang_vels_z': [],
+            'steering_angles': [],
             'collisions': self.collisions}
         for agent in self.agents:
             observations['scans'].append(agent.current_scan)
@@ -498,6 +499,8 @@ class Simulator(object):
             observations['linear_vels_x'].append(agent.state[3])
             observations['linear_vels_y'].append(0.)
             observations['ang_vels_z'].append(agent.state[5])
+            observations['steering_angles'].append(agent.state[2])
+
 
         return observations
 

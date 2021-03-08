@@ -125,7 +125,24 @@ class F110Env(gym.Env, utils.EzPickle):
         try:
             self.params = kwargs['params']
         except:
-            self.params = {'mu': 1.0489, 'C_Sf': 4.718, 'C_Sr': 5.4562, 'lf': 0.15875, 'lr': 0.17145, 'h': 0.074, 'm': 3.74, 'I': 0.04712, 's_min': -0.4189, 's_max': 0.4189, 'sv_min': -3.2, 'sv_max': 3.2, 'v_switch': 7.319, 'a_max': 9.51, 'v_min':-5.0, 'v_max': 20.0, 'width': 0.31, 'length': 0.58}
+            self.params = {'mu': 1.0489, 
+                    'C_Sf': 4.718, 
+                    'C_Sr': 5.4562, 
+                    'lf': 0.15875, 
+                    'lr': 0.17145, 
+                    'h': 0.074, 
+                    'm': 3.74, 
+                    'I': 0.04712, 
+                    's_min': -0.4189, 
+                    's_max': 0.4189, 
+                    'sv_min': -3.2, 
+                    'sv_max': 3.2, 
+                    'v_switch': 7.319, 
+                    'a_max': 9.51, 
+                    'v_min':-5.0, 
+                    'v_max': 20.0, 
+                    'width': 0.31, 
+                    'length': 0.58}
 
         # simulation parameters
         try:
@@ -195,6 +212,10 @@ class F110Env(gym.Env, utils.EzPickle):
         """
         Finalizer, does cleanup
         """
+        try:
+            self.renderer.close()
+        except:
+            pass
         pass
 
     def _check_done(self):
@@ -338,15 +359,13 @@ class F110Env(gym.Env, utils.EzPickle):
         Returns:
             None
         """
-        if self.renderer is None:
-            self.render()
         map_img = np.copy(self.empty_map_img)
 
         obs_size_m = np.array(obstacle_size)
         obs_size_px = obs_size_m / self.map_resolution
 
         obs_locations = []
-        while len(obs_locations) < n:
+        while len(obs_locations) < n_obstacles:
             rand_x = int(np.random.random() * (self.map_width - obs_size_px[0]))
             rand_y = int(np.random.random() * (self.map_height - obs_size_px[1]))
 
@@ -365,7 +384,8 @@ class F110Env(gym.Env, utils.EzPickle):
         obstacle_y = obs_locations[:, 1] * self.map_resolution + self.orig_x + obs_size_m[1] / 2
         obs_locations_m = np.concatenate([obstacle_y[:, None], obstacle_x[:, None]], axis=-1)
 
-        self.renderer.add_obstacles(obs_locations_m, obs_size_m)
+        if self.renderer is not None:
+            self.renderer.add_obstacles(obs_locations_m, obs_size_m)
 
         # self.renderer.update_map_img(map_img, self.map_resolution, self.orig_x, self.orig_y)
 
