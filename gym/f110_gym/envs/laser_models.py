@@ -343,6 +343,7 @@ class ScanSimulator2D(object):
         self.map_width = None
         self.map_resolution = None
         self.dt = None
+        self.map_img = None
         
         # white noise generator
         self.rng = np.random.default_rng(seed=seed)
@@ -351,9 +352,6 @@ class ScanSimulator2D(object):
         theta_arr = np.linspace(0.0, 2*np.pi, num=theta_dis)
         self.sines = np.sin(theta_arr)
         self.cosines = np.cos(theta_arr)
-
-        self.empty_map_img = None
-        self.original_dt = None
     
     def set_map(self, map_path, map_ext):
         """
@@ -399,7 +397,6 @@ class ScanSimulator2D(object):
 
         # get the distance transform
         self.dt = get_dt(self.map_img, self.map_resolution)
-        # self.original_dt = self.dt.copy()
 
         return True
 
