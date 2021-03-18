@@ -158,42 +158,6 @@ class EnvRenderer(pyglet.window.Window):
             self.batch.add(1, GL_POINTS, None, ('v3f/stream', [map_points[i, 0], map_points[i, 1], map_points[i, 2]]), ('c3B/stream', [183, 193, 222]))
         self.map_points = map_points
 
-    def update_map_img(self, map_img, map_resolution, origin_x, origin_y):
-        """
-        Updates the image used for rendering.
-        Development still needed to remove the previous set of obstacle points once new obstacles have been added.
-        At the moment, it just keeps adding points without removing the old map
-
-        Args:
-            map_img (np.ndarray(width, height)): new image to be used
-            map_resolution (float)
-            origin_x (float)
-            origin_y (float)
-
-        Returns:
-            None
-        """
-        map_height = map_img.shape[0]
-        map_width = map_img.shape[1]
-
-        # convert map pixels to coordinates
-        range_x = np.arange(map_width)
-        range_y = np.arange(map_height)
-        map_x, map_y = np.meshgrid(range_x, range_y)
-        map_x = (map_x * map_resolution + origin_x).flatten()
-        map_y = (map_y * map_resolution + origin_y).flatten()
-        map_z = np.zeros(map_y.shape)
-        map_coords = np.vstack((map_x, map_y, map_z))
-
-        # mask and only leave the obstacle points
-        map_mask = map_img == 0.0
-        map_mask_flat = map_mask.flatten()
-        map_points = 50. * map_coords[:, map_mask_flat].T
-        for i in range(map_points.shape[0]):
-            self.batch.add(1, GL_POINTS, None, ('v3f/stream', [map_points[i, 0], map_points[i, 1], map_points[i, 2]]), ('c3B/stream', [183, 193, 222]))
-        self.map_points = map_points
-
-
     def add_obstacles(self, obs_locations, obs_size):
         """
         Adds green obstacles to the map
